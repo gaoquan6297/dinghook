@@ -1,6 +1,7 @@
 package dinghook
 
 import (
+	"bytes"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -227,12 +228,14 @@ func (ding Ding) Send(message interface{}) Result {
 		return Result{ErrMsg: "not support message type"}
 	}
 
-	var buf []byte
-	if buf, err = json.Marshal(paramsMap); err != nil {
+	bf := bytes.NewBuffer([]byte{})
+	jsonEncoder := json.NewEncoder(bf)
+	jsonEncoder.SetEscapeHTML(false)
+	if err = jsonEncoder.Encode(paramsMap); err != nil {
 		return Result{ErrMsg: "marshal message error:" + err.Error()}
 	}
 
-	return postMessage(DingAPIURL+ding.AccessToken, string(buf))
+	return postMessage(DingAPIURL+ding.AccessToken, string(bf.Bytes()))
 }
 
 func convertMessage(m Message) map[string]interface{} {
